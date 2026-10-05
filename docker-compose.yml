@@ -1,0 +1,93 @@
+version: "3.9"
+
+# ============================================================
+# Hermes Agent — Docker Compose
+#
+# Services:
+#   hermes        — the agent (interactive or query mode)
+#   hermes-api    — optional FastAPI wrapper (uncomment to use)
+#   ollama        — local LLM backend (optional)
+# ============================================================
+
+x-hermes-env: &hermes-env
+  HERMES_CONFIG: /app/config/config.yaml
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  # --- Model selection (pick one, or set HERMES_MODEL at runtime) ---
+  HERMES_MODEL: ${HERMES_MODEL:-default}
+  HERMES_MAX_ITERATIONS: ${HERMES_MAX_ITERATIONS:-10}
+  HERMES_STREAM: ${HERMES_STREAM:-false}
+  HERMES_TOOLS_ENABLED: ${HERMES_TOOLS_ENABLED:-true}
+  # --- API keys (set in .env file — never commit real keys) ---
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  TOGETHER_API_KEY: ${TOGETHER_API_KEY:-}
+
+services:
+  # ------------------------------------------------------------------
+  # Main Hermes Agent (interactive REPL or one-shot query)
+  # ------------------------------------------------------------------
+  hermes:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: hermes-agent:latest
+    container_name: hermes-agent
+    stdin_open: true          # keep stdin open for interactive mode
+    tty: true                 # allocate pseudo-TTY for REPL
+    environment:
+      <<: *hermes-env
+    volumes:
+      - ./config:/app/config:ro        # live-reload config without rebuild
+      - ./prompts:/app/prompts:ro      # live-reload system prompts
+      - ./logs:/app/logs               # persist logs on host
+    networks:
+      - hermes-net
+    # Override CMD to pass --query for one-shot mode:
+    #   docker compose run --rm hermes --query "Hello!"
+    #   docker compose run --rm hermes --model claude --query "Summarise X"
+
+  # ------------------------------------------------------------------
+  # Ollama — local LLM (optional; comment out if not needed)
+  # ------------------------------------------------------------------
+  ollama:
+    image: ollama/ollama:latest
+    container_name: hermes-ollama
+    volumes:
+      - ollama-data:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - hermes-net
+    # Pull a model on first run:
+    #   docker compose exec ollama ollama pull llama3.2
+    profiles:
+      - ollama                 # only starts with: docker compose --profile ollama up
+
+  # ------------------------------------------------------------------
+  # Optional FastAPI server (uncomment + implement src/server.py)
+  # ------------------------------------------------------------------
+  # hermes-api:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   image: hermes-agent:latest
+  #   container_name: hermes-api
+  #   command: ["uvicorn", "src.server:app", "--host", "0.0.0.0", "--port", "8080"]
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     <<: *hermes-env
+  #   volumes:
+  #     - ./config:/app/config:ro
+  #     - ./prompts:/app/prompts:ro
+  #     - ./logs:/app/logs
+  #   networks:
+  #     - hermes-net
+
+volumes:
+  ollama-data:
+
+networks:
+  hermes-net:
+    driver: bridge

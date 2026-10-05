@@ -1,0 +1,87 @@
+# ============================================================
+# Hermes Agent — Configuration
+# ============================================================
+# Override any value via environment variables (see README).
+# ============================================================
+
+# ------------------------------------------------------------------
+# Model Backends
+# Register as many as you need; switch at runtime with HERMES_MODEL
+# ------------------------------------------------------------------
+models:
+  # --- OpenAI ---
+  - name: default
+    provider: openai
+    model_id: gpt-4o
+    api_key_env: OPENAI_API_KEY
+    max_tokens: 4096
+    temperature: 0.7
+    top_p: 1.0
+    timeout: 120
+
+  - name: gpt-4o-mini
+    provider: openai
+    model_id: gpt-4o-mini
+    api_key_env: OPENAI_API_KEY
+    max_tokens: 8192
+    temperature: 0.5
+    timeout: 60
+
+  # --- Anthropic ---
+  - name: claude
+    provider: anthropic
+    model_id: claude-3-5-sonnet-20241022
+    api_key_env: ANTHROPIC_API_KEY
+    max_tokens: 8096
+    temperature: 0.7
+    timeout: 120
+
+  - name: claude-haiku
+    provider: anthropic
+    model_id: claude-3-haiku-20240307
+    api_key_env: ANTHROPIC_API_KEY
+    max_tokens: 4096
+    temperature: 0.5
+    timeout: 60
+
+  # --- Ollama (local) ---
+  - name: ollama-llama3
+    provider: ollama
+    model_id: llama3.2
+    api_base: http://ollama:11434  # service name in docker-compose
+    api_key_env: ""                # no key needed for Ollama
+    max_tokens: 4096
+    temperature: 0.7
+    timeout: 180
+
+  # --- OpenAI-Compatible (e.g. LM Studio, vLLM, Together AI) ---
+  - name: compatible
+    provider: openai-compatible
+    model_id: mistralai/Mixtral-8x7B-Instruct-v0.1
+    api_base: https://api.together.xyz/v1
+    api_key_env: TOGETHER_API_KEY
+    max_tokens: 4096
+    temperature: 0.7
+    timeout: 120
+
+# ------------------------------------------------------------------
+# Agent Settings
+# ------------------------------------------------------------------
+agent:
+  default_model: default          # which model to use unless HERMES_MODEL overrides
+  system_prompt_file: prompts/system.md
+
+  # Agentic loop
+  max_iterations: 10              # override with HERMES_MAX_ITERATIONS
+  stream: false                   # override with HERMES_STREAM=true
+
+  # Tools
+  tools_enabled: true             # override with HERMES_TOOLS_ENABLED=false
+  tool_timeout: 30
+
+  # Memory
+  max_history_turns: 20
+
+  # Logging
+  log_level: INFO                 # override with LOG_LEVEL=DEBUG
+  log_file: logs/hermes.log

@@ -1,0 +1,34 @@
+# ============================================================
+# Hermes Agent — Python Dependencies
+# Pin versions for reproducible Docker builds.
+# ============================================================
+
+# LLM providers
+openai==1.51.0
+anthropic==0.34.2
+
+# HTTP client (for web_fetch tool)
+httpx==0.27.2
+
+# Config
+pyyaml==6.0.2
+
+# CLI / utilities
+rich==13.8.1          # optional: pretty terminal output
+
+# Type checking (dev only — safe to keep in prod image)
+typing-extensions==4.12.2
+
+# ---- Optional extras (uncomment as needed) ----
+
+# FastAPI server mode
+# fastapi==0.115.0
+# uvicorn[standard]==0.30.6
+# pydantic==2.9.2
+
+# Vector memory / RAG
+# chromadb==0.5.15
+# sentence-transformers==3.1.1
+
+# Ollama Python client (alternative to OpenAI-compat)
+# ollama==0.3.3
